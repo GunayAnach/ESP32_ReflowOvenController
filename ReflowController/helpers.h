@@ -4,6 +4,9 @@
 // ----------------------------------------------------------------------------
 
 #include <Arduino.h>
+#include <stdint.h>
+#include <math.h> 
+
 
 // ----------------------------------------------------------------------------
 // 
@@ -99,14 +102,14 @@ uint8_t countDigits(uint32_t n) {
 // ----------------------------------------------------------------------------
 
 void ftoa(char *buf, float val, int places) {
-  if (signbit(val)) *buf++ = '-';
+  if (val<0) *buf++ = '-';
 
   int32_t digit = (int32_t)(val);
   const int32_t precision = lpow(10, places);
   int32_t decimal = lround((val - digit) * precision);
 
   if (labs(decimal) == precision) {
-    signbit(val) ? digit-- : digit++;
+    (val<0) ? digit-- : digit++;
     decimal = 0;
   }
 
