@@ -6,7 +6,6 @@
 // ----------------------------------------------------------------------------
 
 #include <Arduino.h>
-#include <avr/pgmspace.h>
 #include "Menu.h"
 
 // ----------------------------------------------------------------------------
@@ -15,40 +14,40 @@ namespace Menu {
 
 // ----------------------------------------------------------------------------
 
-const Item_t NullItem PROGMEM = { (const Menu::Item_s *)NULL, (const Menu::Item_s *)NULL, (const Menu::Item_s *)NULL, (const Menu::Item_s *)NULL, (const Menu::Callback_t)NULL, (const char *)NULL };
+Item_t NullItem PROGMEM = { (const Menu::Item_s *)NULL, (const Menu::Item_s *)NULL, (const Menu::Item_s *)NULL, (const Menu::Item_s *)NULL, (const Menu::Callback_t)NULL, (const char *)NULL };
 
 // ----------------------------------------------------------------------------
 
 Engine::Engine() 
-  : currentItem(&Menu::NullItem), previousItem(&Menu::NullItem), lastInvokedItem(&Menu::NullItem)
+  : currentItem(&Menu::NullItem)
 {
 }
 
 Engine::Engine(const Item_t *initialItem) 
-  : currentItem(initialItem), previousItem(&Menu::NullItem), lastInvokedItem(&Menu::NullItem)
+  : currentItem(initialItem)
 {
 }
 
 // ----------------------------------------------------------------------------
 
 const char * Engine::getLabel(const Item_t * item) const {
-  return (const char *)pgm_read_word((item == NULL) ? &currentItem->Label : &item->Label);
+  return (const char *)pgm_read_ptr((item == NULL) ? &currentItem->Label : &item->Label);
 }
 
 const Item_t * Engine::getPrev(const Item_t * item) const {
-  return (const Item_t *)pgm_read_word((item == NULL) ? &currentItem->Previous : &item->Previous);
+  return (const Item_t *)pgm_read_ptr((item == NULL) ? &currentItem->Previous : &item->Previous);
 }
 
 const Item_t * Engine::getNext(const Item_t * item) const {
-  return (const Item_t *)pgm_read_word((item == NULL) ? &currentItem->Next : &item->Next);
+  return (const Item_t *)pgm_read_ptr((item == NULL) ? &currentItem->Next : &item->Next);
 }
 
 const Item_t * Engine::getParent(const Item_t * item) const {
-  return (const Item_t *)pgm_read_word((item == NULL) ? &currentItem->Parent : &item->Parent);
+  return (const Item_t *)pgm_read_ptr((item == NULL) ? &currentItem->Parent : &item->Parent);
 }
 
 const Item_t * Engine::getChild(const Item_t * item) const {
-  return (const Item_t *)pgm_read_word((item == NULL) ? &currentItem->Child : &item->Child);
+  return (const Item_t *)pgm_read_ptr((item == NULL) ? &currentItem->Child : &item->Child);
 }
 
 // ----------------------------------------------------------------------------
@@ -58,10 +57,8 @@ void Engine::navigate(const Item_t * targetItem) {
   if (targetItem && targetItem != &Menu::NullItem) {
     if (targetItem == getParent(currentItem)) { // navigating back to parent
       commit = executeCallbackAction(actionParent); // exit/save callback
-      lastInvokedItem = &Menu::NullItem;
     }
     if (commit) {
-      previousItem = currentItem;
       currentItem = targetItem;
       executeCallbackAction(actionLabel);
     }
@@ -71,22 +68,10 @@ void Engine::navigate(const Item_t * targetItem) {
 // ----------------------------------------------------------------------------
 
 void Engine::invoke(void) {
-  bool preventTrigger = false;
-
-  if (lastInvokedItem != currentItem) { // prevent 'invoke' twice in a row
-    lastInvokedItem = currentItem;
-    preventTrigger = true; // don't invoke 'trigger' at first Display event
-    executeCallbackAction(actionDisplay);
-  }
-
   const Item_t *child = getChild();
+  executeCallbackAction(actionTrigger);
   if (child && child != &Menu::NullItem) { // navigate to registered submenuitem
     navigate(child);
-  }
-  else { // call trigger in already selected item that has no child
-    if (!preventTrigger) {
-      executeCallbackAction(actionTrigger);
-    }
   }
 }
 
@@ -94,7 +79,7 @@ void Engine::invoke(void) {
 
 bool Engine::executeCallbackAction(const Action_t action) const {
   if (currentItem && currentItem != NULL) {
-    Callback_t callback = (Callback_t)pgm_read_word(&currentItem->Callback);
+    Callback_t callback = (Callback_t)pgm_read_ptr(&currentItem->Callback);
 
     if (callback != NULL) {
       return (*callback)(action);
@@ -108,11 +93,11 @@ bool Engine::executeCallbackAction(const Action_t action) const {
 Info_t Engine::getItemInfo(const Item_t * item) const {
   Info_t result = { 0, 0 };
   const Item_t * i = getChild(getParent());
-  for (; i && i != &Menu::NullItem && &i->Next && i->Next != &Menu::NullItem; i = getNext(i)) {
-    result.siblings++;
+  for (; i && i != &Menu::NullItem; i = getNext(i)) {
     if (i == item) {
       result.position = result.siblings;
     }
+    result.siblings++;
   }
 
   return result;
@@ -121,28 +106,33 @@ Info_t Engine::getItemInfo(const Item_t * item) const {
 // ----------------------------------------------------------------------------
 
 void Engine::render(const RenderCallback_t render, uint8_t maxDisplayedMenuItems) const {    
+  static uint8_t laststart =0;
   if (!currentItem || currentItem == &Menu::NullItem) {
     return;
   }
 
-  uint8_t start = 0;
+  uint8_t start = laststart;
   uint8_t itemCount = 0;
-  const uint8_t center = maxDisplayedMenuItems >> 1;
   Info_t mi = getItemInfo(currentItem);
-  
-  if (mi.position >= (mi.siblings - center)) { // at end
-    start = mi.siblings - maxDisplayedMenuItems;
-  } 
-  else {
-    start = mi.position - center;
-    if (maxDisplayedMenuItems & 0x01) start--; // center if odd
+
+  //beginning of the window
+  if(start > mi.position-1){
+    start = mi.position==0?0:mi.position-1;
   }
-
-  if (start & 0x80) start = 0; // prevent overflow
-
+  
+  if((start + maxDisplayedMenuItems) < mi.position+2){
+    start = mi.position+2 - maxDisplayedMenuItems;
+  }
+  
+  if((start + maxDisplayedMenuItems) > mi.siblings){
+    start = mi.siblings>maxDisplayedMenuItems?mi.siblings-maxDisplayedMenuItems:0;
+  }
+  
+  laststart= start; 
+  
   // first item in current menu level
   const Item_t * i = getChild(getParent());  
-  for (; i && i != &Menu::NullItem && &i->Next && i->Next != &Menu::NullItem; i = getNext(i)) {
+  for (; i && i != &Menu::NullItem; i = getNext(i)) {
     if (itemCount - start >= maxDisplayedMenuItems) break;
     if (itemCount >= start) render(i, itemCount - start);
     itemCount++;

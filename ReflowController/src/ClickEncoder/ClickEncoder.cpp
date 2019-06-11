@@ -30,12 +30,12 @@
 #if ENC_DECODER != ENC_NORMAL
 #  ifdef ENC_HALFSTEP
      // decoding table for hardware with flaky notch (half resolution)
-     const int8_t ClickEncoder::table[16] __attribute__((__progmem__)) = {
+     DRAM_ATTR const int8_t ClickEncoder::table[16] = {
        0, 0, -1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, -1, 0, 0
      };
 #  else
      // decoding table for normal hardware
-     const int8_t ClickEncoder::table[16] __attribute__((__progmem__)) = {
+     DRAM_ATTR const int8_t ClickEncoder::table[16] IRAM_ATTR = {
        0, 1, -1, 0, -1, 0, 0, 1, 1, 0, 0, -1, 0, -1, 1, 0
      };
 #  endif
@@ -44,7 +44,7 @@
 // ----------------------------------------------------------------------------
 
 ClickEncoder::ClickEncoder(uint8_t A, uint8_t B, uint8_t BTN, uint8_t stepsPerNotch, bool active)
-  : doubleClickEnabled(true), accelerationEnabled(true),
+  : doubleClickEnabled(true), accelerationEnabled(false),
     delta(0), last(0), acceleration(0),
     button(Open), steps(stepsPerNotch),
     pinA(A), pinB(B), pinBTN(BTN), pinsActive(active)
@@ -66,17 +66,21 @@ ClickEncoder::ClickEncoder(uint8_t A, uint8_t B, uint8_t BTN, uint8_t stepsPerNo
 // ----------------------------------------------------------------------------
 // call this every 1 millisecond via timer ISR
 //
-void ClickEncoder::service(void)
+void IRAM_ATTR ClickEncoder::service(void)
 {
   bool moved = false;
-  unsigned long now = millis();
+  static unsigned long now = 0;
 
+  now++;
+  
   if (accelerationEnabled) { // decelerate every tick
     acceleration -= ENC_ACCEL_DEC;
     if (acceleration & 0x8000) { // handle overflow of MSB is set
       acceleration = 0;
     }
   }
+
+  portENTER_CRITICAL(&serviecMux);
 
 #if ENC_DECODER == ENC_FLAKY
   last = (last << 2) & 0x0F;
@@ -89,7 +93,7 @@ void ClickEncoder::service(void)
     last |= 1;
   }
 
-  uint8_t tbl = pgm_read_byte(&table[last]);
+  uint8_t tbl = &table[last];
   if (tbl) {
     delta += tbl;
     moved = true;
@@ -122,6 +126,8 @@ void ClickEncoder::service(void)
       acceleration += ENC_ACCEL_INC;
     }
   }
+  
+  portEXIT_CRITICAL(&serviecMux);
 
   // handle button
   //
@@ -139,7 +145,7 @@ void ClickEncoder::service(void)
     }
 
     if (digitalRead(pinBTN) == !HIGH) { // key is now up
-      if (keyDownTicks /*> ENC_BUTTONINTERVAL*/) {
+      if (keyDownTicks) {
         if (button == Held) {
           button = Released;
           doubleClickTicks = 0;
@@ -178,14 +184,15 @@ int16_t ClickEncoder::getValue(void)
 {
   int16_t val;
 
-  cli();
+  portENTER_CRITICAL(&serviecMux);
+
   val = delta;
 
   if (steps == 2) delta = val & 1;
   else if (steps == 4) delta = val & 3;
   else delta = 0; // default to 1 step per notch
 
-  sei();
+  portEXIT_CRITICAL(&serviecMux);
 
   if (steps == 4) val >>= 2;
   if (steps == 2) val >>= 1;

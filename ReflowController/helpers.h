@@ -187,4 +187,36 @@ uint8_t crc8(uint8_t *data, uint16_t data_length) {
   return crc;
 }
 
+//Function Hue_2_RGB
+float Hue_2_RGB( float v1, float v2, float vH )            
+{
+  float r;
+  if ( vH <= 0 ) 
+    vH += 1;
+  if ( vH > 1 ) 
+    vH -= 1;
+  if ( ( 6 * vH ) < 1 )
+  {
+    r= v1 + ( v2 - v1 ) * 6 * vH ;
+  }
+  else if ( ( 2 * vH ) < 1 ) 
+  {
+    r=  v2 ;
+  }
+  else if ( ( 3 * vH ) < 2 ) 
+  {
+    r=  v1 + ( v2 - v1 ) * (.66-vH) * 6;
+  }
+  else
+  {
+    r=v1;
+  }
+  if(r<0)
+  {
+    r=0;
+  }
+  return r;
+}  
+
+
 #endif // HELPERS_H

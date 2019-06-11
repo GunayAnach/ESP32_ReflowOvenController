@@ -9,7 +9,6 @@
 #define __have_menu_h__
 
 #include <Arduino.h>
-#include <avr/pgmspace.h>
 
 namespace Menu
 {
@@ -34,21 +33,18 @@ namespace Menu
     struct Item_s const * Previous;
     struct Item_s const * Parent;
     struct Item_s const * Child;
-    const Callback_t Callback;
+    Callback_t Callback;
     const char * Label;  
   } Item_t;
 
   typedef void (*RenderCallback_t)(const Item_t *, uint8_t);
 
   // a typesafe null item
-  extern const Item_t NullItem;
+  extern Item_t NullItem;
 
   class Engine {
   public:
     const Item_t * currentItem;
-    const Item_t * previousItem;
-    const Item_t * lastInvokedItem; 
-
   public:
     Engine();
     Engine(const Item_t * initialItem);
@@ -72,8 +68,8 @@ namespace Menu
 // ----------------------------------------------------------------------------
 
 #define MenuItem(Name, Label, Next, Previous, Parent, Child, Callback) \
-  extern const Menu::Item_t Next, Previous, Parent, Child; \
-  const Menu::Item_t PROGMEM Name = { \
+  extern Menu::Item_t Next, Previous, Parent, Child; \
+  Menu::Item_t PROGMEM Name = { \
     &Next, &Previous, &Parent, &Child, \
     &Callback, \
     Label \

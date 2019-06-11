@@ -58,7 +58,7 @@ public:
   ClickEncoder(uint8_t A, uint8_t B, uint8_t BTN = -1,
                uint8_t stepsPerNotch = 1, bool active = LOW);
 
-  void service(void);
+  void IRAM_ATTR service(void);
   int16_t getValue(void);
 
 #ifndef WITHOUT_BUTTON
@@ -112,6 +112,9 @@ private:
   uint16_t keyDownTicks = 0;
   uint8_t doubleClickTicks = 0;
   unsigned long lastButtonCheck = 0;
+
+  portMUX_TYPE serviecMux = portMUX_INITIALIZER_UNLOCKED;
+
 #endif
 };
 
