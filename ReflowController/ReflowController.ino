@@ -782,50 +782,54 @@ bool menuWiFi(const Menu::Action_t action){
   {
     //Conneced to Saved WiFi:
     char ssid[32],password[32];
-    ssid[31]=0;
-    password[31]=0;
+    ssid[0]=0;
+    password[0]=0;
     PREF.getString("WIFI_SSID", ssid, 32);
     PREF.getString("WIFI_PASSWORD", password, 32);
 
     tft.fillScreen(ST7735_RED);
     tft.setTextColor(ST7735_WHITE);
     tft.setCursor(10, 50);
-    tft.print("Connecting to: ");
-    tft.setCursor(10, 60);
-    tft.print(ssid);
-    tft.print("  P:");
-    tft.print(password);
-    
-    WiFi.disconnect();
-    
-    if(password[0]==0)
-    {
-      WiFi.begin(ssid);            
+
+    if(ssid[0]==0){
+      tft.print("No WiFi Saved! ");       
     }
     else
     {
-      WiFi.begin(ssid, password);      
-    }
-
-    tft.setCursor(10, 70);
-    for(int i=0;i<20;i++){
-      if (WiFi.status() == WL_CONNECTED) break;
-      delay(500);
-      tft.print(".");
+      tft.print("Connecting to: ");
+      tft.setCursor(10, 60);
+      tft.print(ssid);
       
-    }
-    tft.setCursor(10, 80);
-    if (WiFi.status() == WL_CONNECTED){
-      tft.print("Connected!");
-    }
-    else{
-      tft.print("ERROR! (");      
-      tft.print(WiFi.status());      
-      tft.print(")");      
-      tft.setCursor(10, 90);
-      tft.print("Retying in the BG ...");      
-    }
+      WiFi.disconnect();
+      
+      if(password[0]==0)
+      {
+        WiFi.begin(ssid);            
+      }
+      else
+      {
+        WiFi.begin(ssid, password);      
+      }
+
+      tft.setCursor(10, 70);
+      for(int i=0;i<20;i++){
+        if (WiFi.status() == WL_CONNECTED) break;
+        delay(500);
+        tft.print(".");
         
+      }
+      tft.setCursor(10, 80);
+      if (WiFi.status() == WL_CONNECTED){
+        tft.print("Connected!");
+      }
+      else{
+        tft.print("ERROR! (");      
+        tft.print(WiFi.status());      
+        tft.print(")");      
+        tft.setCursor(10, 90);
+        tft.print("Retying in the BG ...");      
+      }
+    }
     delay(1000);
   }
   else if(action==Menu::actionTrigger || action == Menu::actionDisplay){
@@ -1046,7 +1050,6 @@ void updateProcessDisplay() {
       estimatedTotalTime += (activeProfile.soakTemp - aktSystemTemperature) / (activeProfile.rampUpRate );
       estimatedTotalTime += (activeProfile.peakTemp - activeProfile.soakTemp) / (activeProfile.rampUpRate );
       estimatedTotalTime += (activeProfile.peakTemp - IDLE_TEMP) / (activeProfile.rampDownRate );
-      estimatedTotalTime*=1.2;
       
       pxPerC =  h / (activeProfile.peakTemp * 1.20) ;
     }
