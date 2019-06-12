@@ -81,7 +81,7 @@ Just download the repository. In the upper right corner click **Clown or downloa
 Installation
 ====================
 
-Of course, you need to have the Arduino IDE installed. I've worked with version 1.9.8 only and I will not support older versions. Get it from the [Arduino Download] page or upgrade you current Arduino setup.
+Of course, you need to have the Arduino IDE installed. I've worked with version 1.8.9 only and I will not support older versions. Get it from the [Arduino Download] page or upgrade you current Arduino setup.
 
 There no dependencies all libraries are included in the Projekt folder.
 
