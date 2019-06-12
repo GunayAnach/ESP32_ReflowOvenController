@@ -18,13 +18,9 @@ ESP32 Reflow Oven Controller with WiFi
 * Manual power controll 
 * *Please Note*: Recommend ARDUINO 1.8.9
 * Libraries included in the Projekt folder to avoid problems with versions 
-
-(c) 2019 Patrick Knöbel reflow@im-pro.at
-
-in part based on:
-(c) 2014 Karl Pitrich <karl@pitrich.com>
-
-(c) 2013 Ed Simmons <ed@estechnical.co.uk>
+* (c) 2019 Patrick Knöbel reflow@im-pro.at in part based on:
+  * (c) 2014 Karl Pitrich <karl@pitrich.com>
+  * (c) 2013 Ed Simmons <ed@estechnical.co.uk>
 
 
 **Post action shot**
