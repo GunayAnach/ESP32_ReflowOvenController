@@ -1,31 +1,27 @@
-Reflow Oven Controller
+ESP32 Reflow Oven Controller with WiFi
 ====================
 
-
-**News**
-
-* Some PCBs & parts are available on Tindie.
-
-<a href="https://www.tindie.com/stores/0xPIT/?ref=offsite_badges&utm_source=sellers_0xPIT&utm_medium=badges&utm_campaign=badge_small"><img src="https://d2ss6ovg47m0r5.cloudfront.net/badges/tindie-smalls.png" alt="I sell on Tindie" height="40"></a>
-
-
 **Arduino-based reflow oven controller with:**
-* [PID] loop control
-* [Wave Packet] and [Phase Fired] control for AC outputs
+* [PID] loop control (with auto tune)
+* [Phase Fired] control for AC outputs
 * graphic TFT LC-Display, drawing the temperature curves
   * using an [Adafruit 1.8" TFT] or derivate display
 * solely controlled using a cheap rotary encoder and its single button
+* Webapp to monitor the the temperatures and start and stop the reflow Programm 
 * stores up to 30 temperature profiles in EEPROM
 * configurable PID-parameters
-* simple, small hardware to drive loads up to 600V and up to 8A
+* simple, small hardware to drive loads up to 600V and up to 8A (just schamatic at the moment)
 * hardware can
   * measure two temperatures independently
   * drive two AC loads, such as heater and fan
 * could also be used for slow coockers
-* *Please Note*: Requires Arduino IDE 1.5.x or newer
-
+* Manual power contoll 
+* *Please Note*: Recommend ARDUINO 1.8.9
+* Libraries included in the Projekt folder to avoid problems with versions 
+(c) 2019 Patrick Knödel reflow@im-pro.at
+in part based on:
 (c) 2014 Karl Pitrich <karl@pitrich.com>
-in part based on a project (c) 2013 Ed Simmons <ed@estechnical.co.uk>
+(c) 2013 Ed Simmons <ed@estechnical.co.uk>
 
 
 **Post action shot**
@@ -224,7 +220,7 @@ THE SOFTWARE.
 [PIDValues]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/PIDValues.jpg
 [ProfileSettingsEdit]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/ProfileSettingsEdit.jpg
 
-[Warning]:http://www.proshieldsafetysigns.co.uk/signs/59793_signs.jpg
+[Warning]:https://i.imgur.com/D3Ph8ci_d.jpg?maxwidth=640&shape=thumb&fidelity=medium
 [ImgPCB]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/hardware/v0.2.brd.preview.png
 [ImgSCH]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/hardware/v0.2.sch.preview.png
 
