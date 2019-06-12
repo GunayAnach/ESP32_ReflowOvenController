@@ -2,14 +2,14 @@ ESP32 Reflow Oven Controller with WiFi
 ====================
 
 **Arduino-based reflow oven controller with:**
-* [PID] loop control (with auto tune)
+* [PID] loop control
 * [Phase Fired] control for AC outputs
 * graphic TFT LC-Display, drawing the temperature curves
   * using an [Adafruit 1.8" TFT] or derivate display
 * solely controlled using a cheap rotary encoder and its single button
 * Webapp to monitor the the temperatures and start and stop the reflow Programm 
 * stores up to 30 temperature profiles in EEPROM
-* configurable PID-parameters
+* configurable PID-parameters with bulid in auto tune sytem
 * simple, small hardware to drive loads up to 600V and up to 8A (just schametic at the moment)
 * hardware can
   * measure two temperatures independently
@@ -48,24 +48,14 @@ There is schematic but no board design at the moment. There is an eagle project 
 
 ![Schematic][ImgSCH]
 
-From my manufacturing run, I have some spare PCBs and parts. They are available at my [tindie store].
+The board contains the [ESP32], Very simple [Zero crossing] detection circuit, used to align control logic to mains frequency, two [MAX31855] thermocouple-to-digital converters and two [Sharp S202S01] PCB-mount solid state relays, mounted on cheap [Fischer SK409 50,8] heat sinks. The current software uses only one of the thermocouples, so you need to populate one IC only. If you're lucky, you can get free samples of the MAX31855 from Maxim.
 
-The board contains the [Arduino Pro Micro], very simple [Zero crossing] detection circuit, used to align control logic to mains frequency, two [MAX31855] thermocouple-to-digital converters and two [Sharp S202S01] PCB-mount solid state relays, mounted on cheap [Fischer SK409 50,8] heat sinks. The current software uses only one of the thermocouples, so you need to populate one IC only. If you're lucky, you can get free samples of the MAX31855 from Maxim.
+The software uses [PID] control of the heater. the fan output for improved temperature is not supported at the moment.
 
-The software uses [PID] control of the heater and fan output for improved temperature stability. The heater AC load is controlled using [Wave Packet] control in order to minimize RF interference and load on the relay. For the fan motor, [Phase Fired] control has been implemented.
-
-Please note that all important timings are *based on the mains frequency*, so the circuit will **not work** properly without mains connection.
-
-But for testing, I've added an additional timer to simulate the zero-crossings, in order to run the software without being connected to mains. The software should work in 50 and 60Hz mains, the 60Hz version is not tested, though.
+The software should work in 50 and 60Hz mains, the 60Hz version is not tested, though.
 
 Errata and construction infos
 ========
-
-Issue | Notes
------------- | -------------
-Unfortunately, a trace is missing on the production PCB, you need to solder a bridge. The PCB eagle source has been corrected. | ![Missing Trace][ImgMissingTrace]
-I've used a switch mode power supply which induces a lot of noise on the power supply, causing the MAX31855 to be quite eratic, reporting VCC and GND shots where there are none. Use a linear power supply if you can. | I've added a LC-filter (100µH + 1000µF/100n) + ferrite beads between the PSU and the controller PCB.
-
 
 Screenshots and usage information
 ========
@@ -86,52 +76,21 @@ Image | Information
 Obtaining the source code
 ====================
 
-Get the code using `git`.
-
-	git clone https://github.com/estechnical/reflowOvenController.git
-
-or [download a Snapshot].
-
-I've added some libraries I've used as submodules to the git repositroy, so it is important that, after cloning this repository, you do 
-
-    git submodule update --init
-
-to fetch all involved libraries. (See: [Submodule Cheat Sheet])
-
+Just download the repository. In the upper right corner click **Clown or download** and download zip file.
 
 Installation
 ====================
 
-Of course, you need to have the Arduino IDE installed. I've worked with version 1.5.x only and I will not support older versions. Get it from the [Arduino Download] page or upgrade you current Arduino setup.
+Of course, you need to have the Arduino IDE installed. I've worked with version 1.9.8 only and I will not support older versions. Get it from the [Arduino Download] page or upgrade you current Arduino setup.
 
-There as several dependencies you need to install. 
+There no dependencies all libraries are included in the Projekt folder.
 
-If you are unfamiliar with Arduino Libraries, please read [the library guide].
-Basically, each library needs to be liked or copied into your Arduino library folder.
+Select the right hardware from the Tools->Board menu. Follow the instructions on [ESP32]
 
-On a Mac, this is how you link the submodule libraries to your Arduino libraries folder:
-
-    cd ~/Documents/Arduino/Libraries
-    ln -s ~/Development/<reflow source code>/libraries
-    
-My code uses [TimerOne] for basic timing, for the 1.8" TFT I've used [Adafruit_ST7735], which requires [Adafruit_GFX]. I **strongly suggest** to use my **modified version** of [Adafruit_ST7735-pit], as it **performs much better**, but requires you to use SPI, which my board does anyway.
-
-For the user interface you require my own [Menu] and [ClickEncoder] libraries, which are included as submodules.
-
-All other libraries need to be downloaded and installed.
-
-After you've installed all libraries, open the Arduino IDE, open the ReflowController.pde sketch (using File->Open).
-
-Select the right hardware from the Tools->Board menu. (Use Leonardo for the Pro Micro)
-
-Compile the firmware (Sketch->Verify) to test everything is installed correctly. If something's wrong, feel free to post an issue here on github, I will look into it.
+Compile the firmware (Sketch->Verify) to test everything is installed correctly. 
+If something's wrong you maybe have to delete some libraries from you Arduino folder because they are already in the Projekt folder.
 
 Now, choose the correct serial port from Tools->Serial Port and then upload the code.
-*Remember* that a standard compile will get stuck at "Calibrating..." without proper mains connection, so that zero crossing interrupts can occur.
-
-I could not fit PID Autotuning into the limited space of the Arduino in addition the normal code. So if you want to try to autotune you PID Loop, install the [PID_AutoTune] Library, `#define PIDTUNE 1` in the .ino file, then recompile and download do the Arduino.
-
-As all timing relies on Zero Crossing detection, you need to `#define FAKE_HW 1` and install [TimerThree] when you want to run without actual hardware *and/or* without mains connection.
 
 
 Things to note
@@ -146,19 +105,14 @@ Things to note
 
 Ideas and todo
 ====================
-* Optimize code size so that more features can fit
-* Clamp values for parameters to reasonalbe ranges
 * Add scrollbar (sample implementation in the demo for [Menu]
-* Separate PID configuration for each process step
-* try to make the display faster, it is very slow
 * Named profiles
-* Rewrite [Menu] so that is uses callback objects instead of spaghetti-callbacks
 
 Licensing
 ====================
 ```
 The MIT License (MIT)
-
+Copyright (c) 2019 Patrick Knöbel reflow@im-pro.at
 Copyright (c) 2014 karl@pitrich.com
 All rights reserved.
 
