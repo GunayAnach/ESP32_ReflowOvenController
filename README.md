@@ -10,15 +10,15 @@ ESP32 Reflow Oven Controller with WiFi
 * Webapp to monitor the the temperatures and start and stop the reflow Programm 
 * stores up to 30 temperature profiles in EEPROM
 * configurable PID-parameters
-* simple, small hardware to drive loads up to 600V and up to 8A (just schamatic at the moment)
+* simple, small hardware to drive loads up to 600V and up to 8A (just schametic at the moment)
 * hardware can
   * measure two temperatures independently
   * drive two AC loads, such as heater and fan
 * could also be used for slow coockers
-* Manual power contoll 
+* Manual power controll 
 * *Please Note*: Recommend ARDUINO 1.8.9
 * Libraries included in the Projekt folder to avoid problems with versions 
-(c) 2019 Patrick Knödel reflow@im-pro.at
+(c) 2019 Patrick Knöbel reflow@im-pro.at
 in part based on:
 (c) 2014 Karl Pitrich <karl@pitrich.com>
 (c) 2013 Ed Simmons <ed@estechnical.co.uk>
@@ -42,13 +42,10 @@ in part based on:
 Introduction
 ====================
 
-This Reflow Oven Controller relies on an [Arduino Pro Micro], which is similar to the Leonardo and easily obtainable on eb*y for less than $10, plus my custom shield, which is actually more like a motherboard.
+This Reflow Oven Controller relies on an [ESP32], 
 
-As I believe it is not wise to have a mess of wiring and tiny breakout-boards for operating mains powered equipment, I've decided to design custom board with easily obtainable components.
+There is schematic but no board design at the moment. There is an eagle project in the forked repository.
 
-The hardware can be found in the [folder hardware], including the Eagle schematics and PCB layout files. It should fit the freemium version of Eagle. Here are preview images:
-
-![PCB][ImgPCB]
 ![Schematic][ImgSCH]
 
 From my manufacturing run, I have some spare PCBs and parts. They are available at my [tindie store].
@@ -184,7 +181,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
 
-
+[ESP32]:https://github.com/espressif/arduino-esp32
 [PID Autotune]:https://github.com/br3ttb/Arduino-PID-AutoTune-Library
 [Submodule Cheat Sheet]:http://blog.jacius.info/git-submodule-cheat-sheet/
 [ESTechnical]:http://www.estechnical.co.uk
@@ -221,8 +218,7 @@ THE SOFTWARE.
 [ProfileSettingsEdit]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/ProfileSettingsEdit.jpg
 
 [Warning]:https://i.imgur.com/D3Ph8ci_d.jpg?maxwidth=640&shape=thumb&fidelity=medium
-[ImgPCB]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/hardware/v0.2.brd.preview.png
-[ImgSCH]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/hardware/v0.2.sch.preview.png
+[ImgSCH]:https://raw.githubusercontent.com/pknoe3lh/ESP32_ReflowOvenController/master/Schamatic_ESP8266.png
 
 [ImgMissingTrace]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/MissingTrace.jpg
 [Completed1]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/Completed1.jpg
