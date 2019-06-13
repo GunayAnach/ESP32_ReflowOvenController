@@ -1854,16 +1854,17 @@ void loop()
         if (stateChanged) 
         {
 
-          heaterSetpoint = 0;
+
           PID.SetMode(MANUAL);
           
           PIDTune.Cancel();
-          heaterOutput = 256*tuningHeaterOutput/100;
+          heaterOutput = 255*tuningHeaterOutput/100;
           PIDTune.SetNoiseBand(tuningNoiseBand);
-          PIDTune.SetOutputStep(tuningOutputStep);
+          PIDTune.SetOutputStep(255*tuningOutputStep/100);
           PIDTune.SetLookbackSec(tuningLookbackSec);
         }
         
+        heaterSetpoint = aktSystemTemperature;
 
         int8_t val = PIDTune.Runtime();
 
