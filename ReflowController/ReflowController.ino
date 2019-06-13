@@ -1121,7 +1121,7 @@ void updateProcessDisplay() {
   
   // set values
   tft.setCursor(2, 119);
-  uint16_t percent=(uint16_t)powerHeater*100/256;
+  uint16_t percent=(uint16_t)heaterOutput*100/256;
   alignRightPrefix(percent); 
   tft.print(percent);
   tft.print('%');
