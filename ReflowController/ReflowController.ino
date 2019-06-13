@@ -153,10 +153,10 @@ volatile uint8_t  powerHeater=0;
 float aktSystemTemperature;
 float aktSystemTemperatureRamp; //°C/s
 
-int16_t tuningHeaterOutput=50;
+int16_t tuningHeaterOutput=30;
 int16_t tuningNoiseBand=1;
-int16_t tuningOutputStep=50;
-int16_t tuningLookbackSec=30;
+int16_t tuningOutputStep=10;
+int16_t tuningLookbackSec=60;
 
 
 int activeProfileId = 0;
@@ -599,10 +599,10 @@ bool getItemValueLabel(const Menu::Item_t *mi, char *label) {
     if (mi == &miPeakTime || mi == &miSoakTime || mi == &miLookbackSec) {
       itostr(label, *iValue, "s");
     }
-    if (mi == &miHeaterOutput) {
+    if (mi == &miHeaterOutput || mi == &miOutputStep) {
       itostr(label, *iValue, "%");
     }
-    if(mi == &miNoiseBand || mi == &miOutputStep) {
+    if(mi == &miNoiseBand) {
       itostr(label, *iValue, "");
     }
   }
