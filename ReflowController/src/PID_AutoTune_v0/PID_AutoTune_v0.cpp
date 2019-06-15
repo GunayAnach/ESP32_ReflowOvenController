@@ -128,17 +128,38 @@ void PID_ATune::FinishUp()
 
 float PID_ATune::GetKp()
 {
-	return controlType==1 ? 0.6 * Ku : 0.4 * Ku;
+  switch(controlType){
+    case CT_PI:
+      return 0.45 * Ku;
+    case CT_PID:
+      return 0.60 * Ku;
+    case CT_PID_NO_OVERSHOOT:
+      return 0.20 * Ku;
+  }
 }
 
 float PID_ATune::GetKi()
 {
-	return controlType==1? 1.2*Ku / Pu : 0.48 * Ku / Pu;  // Ki = Kc/Ti
+  switch(controlType){
+    case CT_PI:
+      return 0.54 * Ku / Pu;
+    case CT_PID:
+      return 1.20 * Ku / Pu;
+    case CT_PID_NO_OVERSHOOT:
+      return 0.40 * Ku / Pu; 
+  }
 }
 
 float PID_ATune::GetKd()
 {
-	return controlType==1? 0.075 * Ku * Pu : 0;  //Kd = Kc * Td
+  switch(controlType){
+    case CT_PI:
+      return 0;
+    case CT_PID:
+      return 0.075 * Ku * Pu;
+    case CT_PID_NO_OVERSHOOT:
+      return 0.066 * Ku * Pu;
+  }
 }
 
 void PID_ATune::SetOutputStep(float Step)

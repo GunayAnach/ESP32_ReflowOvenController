@@ -1161,8 +1161,9 @@ void updateProcessDisplay() {
       estimatedTotalTime += (activeProfile.soakTemp - aktSystemTemperature) / (activeProfile.rampUpRate );
       estimatedTotalTime += (activeProfile.peakTemp - activeProfile.soakTemp) / (activeProfile.rampUpRate );
       estimatedTotalTime += (activeProfile.peakTemp - IDLE_TEMP) / (activeProfile.rampDownRate );
+      estimatedTotalTime *=1.2;
       
-      maxTemp =  activeProfile.peakTemp * 1.20;
+      maxTemp =  activeProfile.peakTemp * 1.2;
     }
     Serial.print("maxTemp=");Serial.println(maxTemp);
     Serial.print("estimatedTotalTime=");Serial.println(estimatedTotalTime);
@@ -1198,7 +1199,7 @@ void updateProcessDisplay() {
   tft.setTextSize(2);
   alignRightPrefix((int)aktSystemTemperature);
   printfloat(aktSystemTemperature);
-  tft.print("\367C");  
+  tft.print("\367C ");  
   tft.setTextSize(1);
 
   // current state
@@ -1954,6 +1955,7 @@ void loop()
         }
 
         heaterSetpoint = coolDownStartTemp - (activeProfile.rampDownRate * (time_ms - stateChangedTime_ms) / 1000.0);
+        heaterOutput = 0;
 
         if (heaterSetpoint < IDLE_TEMP) {
             heaterSetpoint = IDLE_TEMP;
@@ -1992,7 +1994,7 @@ void loop()
           PIDTune.SetNoiseBand(tuningNoiseBand);
           PIDTune.SetOutputStep(255*tuningOutputStep/100);
           PIDTune.SetLookbackSec(tuningLookbackSec);
-          PIDTune.SetControlType(1); //We want PID :-)
+          PIDTune.SetControlType(CT_PID_NO_OVERSHOOT); //We want NO Overshoot :-)
         }
 
         int8_t val = PIDTune.Runtime();

@@ -2,6 +2,10 @@
 #define PID_AutoTune_v0
 #define LIBRARY_VERSION	0.0.1
 
+#define CT_PI 0
+#define CT_PID 1
+#define CT_PID_NO_OVERSHOOT 2
+
 class PID_ATune
 {
 
