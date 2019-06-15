@@ -213,7 +213,7 @@ typedef struct {
   float Kd;
 } PID_t;
 
-PID_t heaterPID = { 4.00, 0.05,  2.00 };
+PID_t heaterPID;
 
 PID PID(&heaterInput, &heaterOutput, &heaterSetpoint, heaterPID.Kp, heaterPID.Ki, heaterPID.Kd, DIRECT);
 
@@ -434,6 +434,16 @@ void spashscreen()
   tft.print("(c)2014 karl@pitrich.com");
   tft.setCursor(7, 119);
   tft.print("(c)2019 reflow@im-pro.at");
+  
+#ifdef NOEDGEERRORREPORT
+  tft.setCursor(10, 30);
+  tft.setTextSize(4);
+  tft.setTextWrap(true);
+  tft.print("DEVMODE");
+  tft.setTextWrap(false);
+  tft.setTextSize(1);
+#endif
+  
 }  
 
 
@@ -817,7 +827,10 @@ bool menuWiFi(const Menu::Action_t action){
     //free last Menu List
     for(int i=0;i<wifiItemsCount;i++) free((void*)wifiItems[i].Label);
     if (wifiItems!=NULL) free(wifiItems);
+    
+    //Search for networks
     wifiItemsCount = WiFi.scanNetworks();
+    Serial.print("Wifis found: ");Serial.println(wifiItemsCount);
     
     //generate Menu List
     wifiItems=(Menu::Item_t *)malloc(max(1,wifiItemsCount)*sizeof(Menu::Item_t));
@@ -825,9 +838,15 @@ bool menuWiFi(const Menu::Action_t action){
       reportError("Melloc Error!");
     }
     
-    if (wifiItemsCount == 0) 
+    if(wifiItemsCount==WIFI_SCAN_FAILED){
+      wifiItemsCount=0;
+      wifiItems[0].Label="WIFI_SCAN_FAILED!";
+      wifiItems[0].Callback=NULL;              
+    }
+    else if (wifiItemsCount == 0) 
     {      
       wifiItems[0].Label="No WiFis found!";
+      wifiItems[0].Callback=NULL;        
     } 
     else 
     {
@@ -1228,10 +1247,6 @@ void updateProcessDisplay() {
   tft.print("\367C/s    ");
 }
 
-void printBottomLine(){
-  
-}
-
 void memoryFeedbackScreen(uint8_t profileId, bool loading) {
   tft.fillScreen(ST7735_GREEN);
   tft.setTextColor(ST7735_BLACK);
@@ -1425,9 +1440,10 @@ void setup() {
   RGBLED.begin(RGB_CLK,RGB_SDO,RGB_SDO,0);  
   setLEDRGBBColor(0,0,0);
   
-  //EEPROM init
+  //Preferences init
   PREF.begin("REFLOW");
   loadLastUsedProfile();
+  loadPID();
   
   //init Wifi:
   WiFi.begin();            
