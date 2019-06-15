@@ -39,7 +39,7 @@ const char ROOT_HTML[] PROGMEM = R"=====(
           vAxes: {
             // Adds titles to each axis.
             0: {
-              title: 'Temps (�C)',
+              title: 'Temps (°C)',
               viewWindow: {
                 max:300,
                 min:0

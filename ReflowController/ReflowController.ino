@@ -6,7 +6,7 @@
 // ----------------------------------------------------------------------------
 
 //Devdefins
-#define NOEDGEERRORREPORT 
+//#define NOEDGEERRORREPORT 
 
 //Pin Mapping
 #define LCD_CS      27
@@ -31,7 +31,7 @@
 
 //constance
 #define RECAL_ZEROX_TIME_MS 100 
-#define ZEROX_TIMEOUT_MS 1000 
+#define ZEROX_TIMEOUT_MS 5000      
 #define READ_TEMP_INTERVAL_MS 100 
 #define READ_TEMP_AVERAGE_COUNT 10 
 
@@ -40,6 +40,7 @@
 #define MAX_PROFILES  30
 #define MENUE_ITEMS_VISIBLE 5
 #define MENU_ITEM_HIEGT 12
+#define PROFILE_NAME_LENGTH 11
 
 //includes
 #include <WiFi.h>
@@ -57,20 +58,18 @@
 #include "src/Menu/Menu.h"
 #include "src/ClickEncoder/ClickEncoder.h"
 
-#include "helpers.h"
-#include "sin.h"
 #include "root_html.h"
 
 //structs
 // data type for the values used in the reflow profile
 typedef struct profileValues_s {
+  char    name[PROFILE_NAME_LENGTH];
   int16_t soakTemp;
   int16_t soakDuration;
   int16_t peakTemp;
   int16_t peakDuration;
   float  rampUpRate;
   float  rampDownRate;
-  uint8_t checksum;
 } Profile_t;
 
 typedef union {
@@ -100,7 +99,8 @@ typedef enum {
 
   Complete = 20,
 
-  Tune = 30
+  PreTune = 30,
+  Tune,
 } State;
 
 
@@ -116,8 +116,8 @@ bool menuExit(const Menu::Action_t);
 bool cycleStart(const Menu::Action_t);
 bool menuDummy(const Menu::Action_t);
 bool editNumericalValue(const Menu::Action_t);
+bool editProfileName(const Menu::Action_t);
 bool saveLoadProfile(const Menu::Action_t);
-bool editNumericalValue(const Menu::Action_t);
 bool manualHeating(const Menu::Action_t);
 bool menuWiFi(const Menu::Action_t);
 bool factoryReset(const Menu::Action_t);
@@ -125,6 +125,10 @@ bool factoryReset(const Menu::Action_t);
 
 //Varables
 const char * ver = "4.0";
+
+//https://docs.google.com/spreadsheets/d/1syyYxHWjEHy5YJJYK1BmVZYog_yKRtXpa9yudWSkGAE/edit?usp=sharing
+//(ASIN(A3/256*2-1)+PI()/2)/PI()*256
+const uint8_t asinelookupTable[] {0,10,14,17,20,22,25,27,28,30,32,34,35,37,38,39,41,42,43,44,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,67,68,69,70,71,72,72,73,74,75,76,76,77,78,79,80,80,81,82,83,83,84,85,86,86,87,88,88,89,90,91,91,92,93,93,94,95,95,96,97,98,98,99,100,100,101,102,102,103,104,104,105,106,106,107,108,108,109,110,110,111,111,112,113,113,114,115,115,116,117,117,118,119,119,120,120,121,122,122,123,124,124,125,126,126,127,128,128,129,129,130,131,131,132,133,133,134,135,135,136,136,137,138,138,139,140,140,141,142,142,143,144,144,145,145,146,147,147,148,149,149,150,151,151,152,153,153,154,155,155,156,157,157,158,159,160,160,161,162,162,163,164,164,165,166,167,167,168,169,169,170,171,172,172,173,174,175,175,176,177,178,179,179,180,181,182,183,183,184,185,186,187,188,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,211,212,213,214,216,217,218,220,221,223,225,227,228,230,233,235,238,241,245};
 
 SPIClass MYSPI(HSPI); 
 SPIClass RGBLED(VSPI); 
@@ -174,8 +178,9 @@ LastItemState_t currentlyRenderedItems[MENUE_ITEMS_VISIBLE];
 //       Name,            Label,              Next,               Previous,         Parent,           Child,            Callback
 MenuItem(miExit,          "EXIT",             Menu::NullItem,     Menu::NullItem,   Menu::NullItem,   miCycleStart,     menuExit);
   MenuItem(miCycleStart,    "Start Cycle",      miEditProfile,      Menu::NullItem,   miExit,           Menu::NullItem,   cycleStart);
-  MenuItem(miEditProfile,   "Edit Profile",     miLoadProfile,      miCycleStart,     miExit,           miRampUpRate,     menuDummy);
-    MenuItem(miRampUpRate,    "Ramp up  ",        miSoakTemp,         Menu::NullItem,   miEditProfile,    Menu::NullItem,   editNumericalValue);
+  MenuItem(miEditProfile,   "Edit Profile",     miLoadProfile,      miCycleStart,     miExit,           miName,            menuDummy);
+    MenuItem(miName,          "Name     ",        miRampUpRate,       Menu::NullItem,   miEditProfile,    Menu::NullItem,   editProfileName);
+    MenuItem(miRampUpRate,    "Ramp up  ",        miSoakTemp,         miName,           miEditProfile,    Menu::NullItem,   editNumericalValue);
     MenuItem(miSoakTemp,      "Soak temp",        miSoakTime,         miRampUpRate,     miEditProfile,    Menu::NullItem,   editNumericalValue);
     MenuItem(miSoakTime,      "Soak time",        miPeakTemp,         miSoakTemp,       miEditProfile,    Menu::NullItem,   editNumericalValue);
     MenuItem(miPeakTemp,      "Peak temp",        miPeakTime,         miSoakTime,       miEditProfile,    Menu::NullItem,   editNumericalValue);
@@ -214,15 +219,43 @@ PID PID(&heaterInput, &heaterOutput, &heaterSetpoint, heaterPID.Kp, heaterPID.Ki
 
 PID_ATune PIDTune(&heaterInput, &heaterOutput);
 
-
-char buf[20]; // generic char buffer
-
 bool menuUpdateRequest = true;
 bool initialProcessDisplay = false;
 
 uint64_t cycleStartTime=0;
 
+
+
 //Funcktions
+float Hue_2_RGB( float v1, float v2, float vH )            
+{
+  float r;
+  if ( vH <= 0 ) 
+    vH += 1;
+  if ( vH > 1 ) 
+    vH -= 1;
+  if ( ( 6 * vH ) < 1 )
+  {
+    r= v1 + ( v2 - v1 ) * 6 * vH ;
+  }
+  else if ( ( 2 * vH ) < 1 ) 
+  {
+    r=  v2 ;
+  }
+  else if ( ( 3 * vH ) < 2 ) 
+  {
+    r=  v1 + ( v2 - v1 ) * (.66-vH) * 6;
+  }
+  else
+  {
+    r=v1;
+  }
+  if(r<0)
+  {
+    r=0;
+  }
+  return r;
+}  
 
 void reportError(char *text)
 {
@@ -268,7 +301,6 @@ void setLEDRGBBColor(uint8_t r, uint8_t g, uint8_t b)
   RGBLED.transfer(g);
   RGBLED.transfer(r);
   RGBLED.endTransaction();
-
 }
 
 
@@ -426,23 +458,20 @@ bool keyboard(const char * name, char * buffer, uint32_t length, bool init, bool
 
   static int numElements=0;
   static int lastencAbsolute=0;
-  char start[] =  {'a', 'A', '0', '!', ':', '[', '{', 0 };
-  char end[]   =  {'z', 'Z', '9', '/', '@', '_', '~', 2 };
-  int x[]      =  {2,   2,   2,   68,  2,   50,  90,  2 };
+  char start[] =  {'a', 'A', '0', '!', ':', '[', '{', 0 }; 
+  char end[]   =  {'z', 'Z', '9', '/', '@', '`', '~', 2 };
   int y[]      =  {0,   10,  20,  20,  30,  30,  30,  40};
+  int x[]      =  {2,   2,   2,   62,  2,   44,  80,  2 };
   int spacing[]=  {6,   6,   6,   6,   6,   6,   6,   60};
-  int akt=0;
-  
+  int akt=0;  
   
   if(encAbsolute<0) encAbsolute=0;
   if(encAbsolute>numElements) encAbsolute=numElements;
   
   for(int i=0;i<sizeof(start);i++){
-    int charcount =0;
     for(char c=start[i];c<=end[i];c++)
     {
-      tft.setCursor(x[i]+charcount*spacing[i], y[i]+50);
-      charcount++;
+      tft.setCursor(x[i]+(c-start[i])*spacing[i], y[i]+50);
       if(init || encAbsolute== akt || lastencAbsolute== akt){
         if(encAbsolute== akt){
           tft.setTextColor(ST7735_WHITE, ST7735_BLUE);          
@@ -451,19 +480,12 @@ bool keyboard(const char * name, char * buffer, uint32_t length, bool init, bool
           tft.setTextColor(ST7735_BLACK, ST7735_WHITE);          
         }
         switch(c){
-          case 0:
-            tft.print("SPACE");
-            if(trigger) 
-            {
-              buffer[p++]=' ';
-              buffer[p]=0;
-            }
-            break;
           case 1:
             tft.print("DELETE");
             if(trigger) 
             {
-              buffer[--p]=0;
+              if(p>0)
+                buffer[--p]=0;
             }
             break;
           case 2:
@@ -473,12 +495,20 @@ bool keyboard(const char * name, char * buffer, uint32_t length, bool init, bool
               finisched=true;
             }
             break;
+          case 0:
           default:
-            tft.print(c);
+            if(c==0){
+              tft.print("SPACE");
+            }
+            else{
+              tft.print(c);
+            }
             if(trigger) 
             {
-              buffer[p++]=c;
-              buffer[p]=0;
+              if (p<(length-1)){
+                buffer[p++]=(c==0?' ':c);
+                buffer[p]=0;                
+              }
             }
             break;
         } 
@@ -493,12 +523,13 @@ bool keyboard(const char * name, char * buffer, uint32_t length, bool init, bool
   //update diaply
   tft.setCursor(2, 20);
   tft.setTextColor(ST7735_WHITE, ST7735_RED);
+  tft.setTextWrap(true);
   tft.print(buffer);
-  for(int i=0;i<length-p;i++)
+  for(int i=0;i<length-1-p;i++)
   {
     tft.print(" "); 
   }
-  
+  tft.setTextWrap(false);  
   tft.setTextColor(ST7735_BLACK, ST7735_WHITE);  
   
   return finisched;
@@ -528,8 +559,14 @@ bool menuDummy(const Menu::Action_t a) {
   return true;
 }
 
-void printfloat(float val, uint8_t precision = 1) {
-  ftoa(buf, val, precision);
+void printfloat(float val) {
+  char buf[20];
+  snprintf(buf,20,"%.1f",val);
+  tft.print(buf);
+}
+void printfloat2(float val) {
+  char buf[20];
+  snprintf(buf,20,"%.2f",val);
   tft.print(buf);
 }
 
@@ -544,6 +581,7 @@ const char * currentStateToString()
     casePrintState(Peak);
     casePrintState(CoolDown);
     casePrintState(Complete);
+    casePrintState(PreTune);
     casePrintState(Tune);
     default: return "Idle";
   }
@@ -581,38 +619,42 @@ bool getItemValueLabel(const Menu::Item_t *mi, char *label) {
   
   getItemValuePointer(mi, &dValue, &iValue);
 
-  if (isRampSetting(mi) || isPidSetting(mi)) {
-    p = label;
-    ftoa(p, *dValue, (isPidSetting(mi)) ? 2 : 1); // need greater precision with pid values
-    p = label;
-    
-    if (isRampSetting(mi)) {
-      while(*p != '\0') p++;
-      *p++ = 0xf7; *p++ = 'C'; *p++ = '/'; *p++ = 's';
-      *p = '\0';
-    }
+  if(isRampSetting(mi)){
+    sprintf(label,"%.1f\367C/s",*dValue);    
   }
-  else {
-    if (mi == &miPeakTemp || mi == &miSoakTemp) {
-      itostr(label, *iValue, "\367C");
-    }
-    if (mi == &miPeakTime || mi == &miSoakTime || mi == &miLookbackSec) {
-      itostr(label, *iValue, "s");
-    }
-    if (mi == &miHeaterOutput || mi == &miOutputStep) {
-      itostr(label, *iValue, "%");
-    }
-    if(mi == &miNoiseBand) {
-      itostr(label, *iValue, "");
-    }
+  else if(isPidSetting(mi)){
+    sprintf(label,"%.2f",*dValue);    
   }
+  else if (mi == &miPeakTemp || mi == &miSoakTemp) {
+    sprintf(label,"%d\367C",*iValue);        
+  }
+  else if (mi == &miPeakTime || mi == &miSoakTime || mi == &miLookbackSec) {
+    sprintf(label,"%ds",*iValue);        
+  }
+  else if (mi == &miHeaterOutput || mi == &miOutputStep) {
+    sprintf(label,"%d%%",*iValue);        
+  }
+  else if(mi == &miNoiseBand) {
+    sprintf(label,"%d",*iValue);        
+  }
+  else if(mi == &miName) {
+    sprintf(label,"%s",activeProfile.name);
+  }
+  else{
+    return false;    
+  }
+  return true;
 
-  return dValue || iValue;
 }
 
 bool editNumericalValue(const Menu::Action_t action) 
 { 
+  static int16_t iValueLast;
+  static float   dValueLast;
+  int16_t *iValue = NULL;
+  float  *dValue = NULL;
   bool init=false;
+  getItemValuePointer(myMenue.currentItem, &dValue, &iValue);
   if ((init=(action == Menu::actionTrigger && currentState != Edit)) || action == Menu::actionDisplay) 
   {
     if (init) 
@@ -622,6 +664,9 @@ bool editNumericalValue(const Menu::Action_t action)
       tft.setCursor(10, 80);
       tft.print("Edit & click to save.");
       Encoder.setAccelerationEnabled(true);
+      //save last Value
+      if(iValue!=NULL) iValueLast=*iValue;
+      if(dValue!=NULL) dValueLast=*dValue;
     }
 
     for (uint8_t i = 0; i < MENUE_ITEMS_VISIBLE; i++) 
@@ -642,17 +687,13 @@ bool editNumericalValue(const Menu::Action_t action)
 
     tft.setTextColor(ST7735_WHITE, ST7735_RED);
 
-    int16_t *iValue = NULL;
-    float  *dValue = NULL;
-    getItemValuePointer(myMenue.currentItem, &dValue, &iValue);
+    //no negative numbers nedded!
+    if(encAbsolute<0) encAbsolute=0;       
 
     if (isRampSetting(myMenue.currentItem) || isPidSetting(myMenue.currentItem)) 
     {
       float tmp;
       float factor = (isPidSetting(myMenue.currentItem)) ? 100 : 10;
-
-      //no negative numbers nedded!
-      if(encAbsolute<0) encAbsolute=0;       
 
       if (init) {
         tmp = *dValue;
@@ -669,7 +710,7 @@ bool editNumericalValue(const Menu::Action_t action)
       if (init) encAbsolute = *iValue;
       else *iValue = encAbsolute;
     }
-
+    char buf[20];
     getItemValueLabel(myMenue.currentItem, buf);
     tft.print(buf);
     tft.print(" ");
@@ -680,13 +721,54 @@ bool editNumericalValue(const Menu::Action_t action)
     currentState = Settings;
     clearLastMenuItemRenderState();
 
-    if (isPidSetting(myMenue.currentItem)) {
+    if(action == Menu::actionParent){
+      //restor Value
+      if(iValue!=NULL) *iValue=iValueLast;
+      if(dValue!=NULL) *dValue=dValueLast;
+    }
+    else if (isPidSetting(myMenue.currentItem)) {
       savePID();
     }
-
     Encoder.setAccelerationEnabled(false);
   }
   return true;
+}
+
+bool editProfileName(const Menu::Action_t action) {
+  static char name[PROFILE_NAME_LENGTH];
+  if (action == Menu::actionTrigger || action == Menu::actionDisplay) 
+  {
+    bool trigger =false;
+    bool init=false;  
+    if (action == Menu::actionTrigger && currentState != Edit) 
+    {
+      Serial.println("Init");
+      init =true;
+      currentState = Edit;
+      name[0]=0;
+      Encoder.setAccelerationEnabled(true);
+    }
+    else if(action==Menu::actionTrigger)
+    {
+      Serial.println("Trigger");
+      trigger=true;
+    }
+    if(keyboard("Profile Name",name,PROFILE_NAME_LENGTH,init,trigger))
+    {
+      //Done!
+      snprintf(activeProfile.name,PROFILE_NAME_LENGTH,"%s",name);      
+      currentState = Settings;
+      Encoder.setAccelerationEnabled(false);
+      clearLastMenuItemRenderState();      
+    }    
+  }
+  else if (action == Menu::actionParent && currentState == Edit) 
+  {
+    Encoder.setAccelerationEnabled(false);
+    currentState = Settings;
+    clearLastMenuItemRenderState();
+  }
+  return true;  
 }
 
 bool manualHeating(const Menu::Action_t action) {
@@ -919,7 +1001,7 @@ bool saveLoadProfile(const Menu::Action_t action) {
       tft.setTextColor(ST7735_BLACK, ST7735_WHITE);
 
       encAbsolute = activeProfileId;      
-      tft.setCursor(10, 90);
+      tft.setCursor(10, 100);
       tft.print("Doubleclick to exit");
     }
     if (encAbsolute > MAX_PROFILES) encAbsolute = MAX_PROFILES;
@@ -927,11 +1009,19 @@ bool saveLoadProfile(const Menu::Action_t action) {
 
     tft.setCursor(10, 80);
     tft.print("Click to ");
-    tft.print((isLoad) ? "load " : "save ");
+    tft.print((isLoad) ? "load " : "override ");
     tft.setTextColor(ST7735_WHITE, ST7735_RED);
     tft.print(encAbsolute);
     tft.setTextColor(ST7735_BLACK, ST7735_WHITE);    
     tft.print("   ");
+    tft.setCursor(10, 90);
+    tft.print("Profile name: ");
+    tft.setTextColor(ST7735_WHITE, ST7735_RED);
+    char buffer[PROFILE_NAME_LENGTH];
+    loadProfileName(encAbsolute,buffer);
+    tft.print(buffer);
+    tft.setTextColor(ST7735_BLACK, ST7735_WHITE);    
+    tft.print("                           ");
   }
   else if ((action == Menu::actionParent || action == Menu::actionTrigger ) && currentState == Edit) 
   {
@@ -956,10 +1046,11 @@ bool cycleStart(const Menu::Action_t action) {
     }
     else
     {
-      currentState = Tune;      
+    	//we want to preheat till we have a stable temprratur
+      currentState = PreTune;      
     }
 
-    initialProcessDisplay = false;
+    initialProcessDisplay = true;
     menuUpdateRequest = false;
   }
 
@@ -987,6 +1078,7 @@ void renderMenuItem(const Menu::Item_t *mi, uint8_t pos) {
   tft.print(myMenue.getLabel(mi));
 
   // show values if in-place editable items
+  char buf[20];
   if (getItemValueLabel(mi, buf)) {
     tft.print(' '); tft.print(buf); tft.print("   ");
   }
@@ -1024,8 +1116,8 @@ void updateProcessDisplay() {
   // header & initial view
   tft.setTextColor(ST7735_WHITE, ST7735_BLUE);
 
-  if (!initialProcessDisplay) {
-    initialProcessDisplay = true;
+  if (initialProcessDisplay) {
+    initialProcessDisplay = false;
 
     starttime_s=esp_timer_get_time()/1000000;
     
@@ -1033,17 +1125,17 @@ void updateProcessDisplay() {
     tft.fillRect(0, 0, tft.width(), MENU_ITEM_HIEGT, ST7735_BLUE);
     tft.setCursor(2, y);
     
-    if(currentState == Tune)
+    uint16_t maxTemp;
+    if(currentState == PreTune)
     {
       tft.print("Tuning ");
       
-      estimatedTotalTime=60*10;
-    
-      pxPerC =  h / 300.0 ;
+      estimatedTotalTime=tuningLookbackSec*20;
+      maxTemp = 300 ;
     }
     else{
       tft.print("Profile ");
-      tft.print(activeProfileId);
+      tft.print(activeProfile.name);
 
       // estimate total run time for current profile
       estimatedTotalTime = activeProfile.soakDuration + activeProfile.peakDuration;
@@ -1051,9 +1143,14 @@ void updateProcessDisplay() {
       estimatedTotalTime += (activeProfile.peakTemp - activeProfile.soakTemp) / (activeProfile.rampUpRate );
       estimatedTotalTime += (activeProfile.peakTemp - IDLE_TEMP) / (activeProfile.rampDownRate );
       
-      pxPerC =  h / (activeProfile.peakTemp * 1.20) ;
+      maxTemp =  activeProfile.peakTemp * 1.20;
     }
+    Serial.print("maxTemp=");Serial.println(maxTemp);
+    Serial.print("estimatedTotalTime=");Serial.println(estimatedTotalTime);
+    pxPerC =  (float) h / maxTemp;
     pxPerS = 160 / estimatedTotalTime;
+    Serial.print("pxPerC=");Serial.println(pxPerC);
+    Serial.print("pxPerS=");Serial.println(pxPerS);
 
     // 50°C grid
     for (uint16_t tg = 0; tg < activeProfile.peakTemp * 1.20; tg += 50) {
@@ -1127,7 +1224,7 @@ void updateProcessDisplay() {
   tft.print('%');
 
   tft.print("      \x12 "); // alternative: \x7f
-  printfloat(aktSystemTemperatureRamp);
+  printfloat2(aktSystemTemperatureRamp);
   tft.print("\367C/s    ");
 }
 
@@ -1157,17 +1254,7 @@ void saveProfile(unsigned int targetProfile) {
 
 void loadProfile(unsigned int targetProfile) {
   memoryFeedbackScreen(targetProfile, true);
-  bool ok = loadParameters(targetProfile);
-
-  if (!ok) {
-    tft.fillScreen(ST7735_RED);
-    tft.setTextColor(ST7735_BLACK);
-    tft.setCursor(10, 50);
-    tft.print("Checksum error!");
-    tft.setCursor(20, 50);
-    tft.print("Review profile.");
-    delay(2500);
-  }
+  loadParameters(targetProfile);
 
   // save in any way, as we have no undo
   activeProfileId = targetProfile;
@@ -1177,6 +1264,7 @@ void loadProfile(unsigned int targetProfile) {
 }
 
 void makeDefaultProfile() {
+  snprintf(activeProfile.name,PROFILE_NAME_LENGTH,"%s","Default");
   activeProfile.soakTemp     = 130;
   activeProfile.soakDuration =  80;
   activeProfile.peakTemp     = 220;
@@ -1191,15 +1279,11 @@ void makeDefaultPID() {
 }
 
 void getProfileKey(uint8_t profile, char * buffer){
-  buffer[0]='P';
-  buffer[1]=48+(profile/100)%10;
-  buffer[2]=48+(profile/10)%10;
-  buffer[3]=48+profile%10;
-  buffer[4]=0;  
+  sprintf(buffer,"P%03d",profile);
 }
 
 bool saveParameters(uint8_t profile) {
-  char buffer[5];
+  char buffer[10];
   getProfileKey(profile, buffer);
   Serial.print("Save Profile: ");
   Serial.println(buffer);
@@ -1209,7 +1293,7 @@ bool saveParameters(uint8_t profile) {
 }
 
 bool loadParameters(uint8_t profile) {
-  char buffer[5];
+  char buffer[10];
   getProfileKey(profile, buffer);
   Serial.print("Load Profile: ");
   Serial.println(buffer);
@@ -1217,8 +1301,8 @@ bool loadParameters(uint8_t profile) {
   size_t length = PREF.getBytesLength(buffer);
   
   if(length!=sizeof(Profile_t)){
-    makeDefaultProfile();  
     Serial.println("load default PROFILE!");
+    makeDefaultProfile();  
   }
   else
   {
@@ -1226,6 +1310,24 @@ bool loadParameters(uint8_t profile) {
   }  
 
   return true;
+}
+
+void loadProfileName(uint8_t id, char * buffer){
+  Profile_t temp;
+  char profilestring[10];
+  getProfileKey(id, profilestring);
+  Serial.println(profilestring);
+
+  size_t length = PREF.getBytesLength(profilestring);
+  
+  if(length!=sizeof(Profile_t)){
+    snprintf(buffer,PROFILE_NAME_LENGTH,"%s","--FREE--");
+  }
+  else
+  {
+    PREF.getBytes(profilestring, (uint8_t*)&temp, length);
+    snprintf(buffer,PROFILE_NAME_LENGTH,"%s",temp.name);    
+  }  
 }
 
 bool savePID() {
@@ -1239,7 +1341,7 @@ bool loadPID() {
   
   if(length!=sizeof(heaterPID)){
     makeDefaultPID();
-Serial.println("load default PID");
+    Serial.println("load default PID");
   }
   else
   {
@@ -1328,8 +1430,7 @@ void setup() {
   loadLastUsedProfile();
   
   //init Wifi:
-  WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
+  WiFi.begin();            
  
   //init Webserver
   if (MDNS.begin("ReflowController")) {
@@ -1448,7 +1549,7 @@ void loop()
   static uint64_t lastDisplayUpdate=time_ms;
   static uint64_t lastControlloopupdate=time_ms;
 
-  static uint8_t  beepcount =10;
+  static uint8_t  beepcount =1; //start beep
 
   // --------------------------------------------------------------------------
   // Handle internet requests
@@ -1850,25 +1951,38 @@ void loop()
 
         }
         break;
+      case PreTune:
+        if(stateChanged)
+        {
+        	PID.SetMode(MANUAL);
+        	heaterSetpoint = aktSystemTemperature;
+            heaterOutput = 255*tuningHeaterOutput/100;
+        }
+        if(heaterSetpoint+tuningNoiseBand <aktSystemTemperature || heaterSetpoint-tuningNoiseBand >aktSystemTemperature ) {
+          stateChangedTime_ms=time_ms;
+          heaterSetpoint = aktSystemTemperature;
+        }
+        if (time_ms - stateChangedTime_ms >= tuningLookbackSec*2 * 1000) {
+          currentState = Tune;
+        }
+        break;
       case Tune:
         if (stateChanged) 
         {
-
-
-          PID.SetMode(MANUAL);
+          heaterSetpoint = aktSystemTemperature;
           
           PIDTune.Cancel();
           heaterOutput = 255*tuningHeaterOutput/100;
           PIDTune.SetNoiseBand(tuningNoiseBand);
           PIDTune.SetOutputStep(255*tuningOutputStep/100);
           PIDTune.SetLookbackSec(tuningLookbackSec);
+          PIDTune.SetControlType(1); //We want PID :-)
         }
-        
-        heaterSetpoint = aktSystemTemperature;
 
         int8_t val = PIDTune.Runtime();
 
-        if (val != 0) {
+        if (val != 0) 
+        {
           currentState = CoolDown;
           heaterPID.Kp = PIDTune.GetKp();
           heaterPID.Ki = PIDTune.GetKi();
@@ -1877,11 +1991,14 @@ void loop()
           savePID();
 
           tft.setCursor(40, 40);
-          tft.print("Kp: "); tft.print((uint32_t)(heaterPID.Kp * 100));
-          tft.setCursor(40, 52);
-          tft.print("Ki: "); tft.print((uint32_t)(heaterPID.Ki * 100));
-          tft.setCursor(40, 64);
-          tft.print("Kd: "); tft.print((uint32_t)(heaterPID.Kd * 100));
+          tft.print("Kp: "); 
+          printfloat2(heaterPID.Kp);
+          tft.setCursor(40, 50);
+          tft.print("Ki: "); 
+          printfloat2(heaterPID.Ki);
+          tft.setCursor(40, 60);
+          tft.print("Kd: "); 
+          printfloat2(heaterPID.Kd);
         }
 
         break;
@@ -1894,6 +2011,7 @@ void loop()
          currentState == Soak ||
          currentState == RampUp ||
          currentState == Peak ||
+         currentState == PreTune ||
          currentState == Tune          
        )
     {
