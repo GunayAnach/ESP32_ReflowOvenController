@@ -53,9 +53,6 @@ The software uses [PID] control of the heater. the fan output for improved tempe
 
 The software should work in 50 and 60Hz mains, the 60Hz version is not tested, though.
 
-Errata and construction infos
-========
-
 Screenshots and usage information
 ========
 
