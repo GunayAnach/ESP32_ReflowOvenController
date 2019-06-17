@@ -110,7 +110,7 @@ Things to note
 
 Ideas and todo
 ====================
-* Add scrollbar (sample implementation in the demo for [Menu]
+* Add scrollbar (sample implementation in the demo for [Menu])
 
 Licensing
 ====================
