@@ -22,23 +22,21 @@ ESP32 Reflow Oven Controller with WiFi
   * (c) 2014 Karl Pitrich <karl@pitrich.com>
   * (c) 2013 Ed Simmons <ed@estechnical.co.uk>
 
+**!!!DANGER!!!**
 
-**Post action shot**
-
-![Oven](images/IMG_20190613_075913.jpg?raw=true) | ![Warning]
------------- | -------------
-
-
+![Warning]
 ## Warning: This project operates with possibly lethal mains voltage. If you are unsure what to do, don't do it and get help from an experienced tinkerer with professional training.
 
 ## Warning: Do not leave the Oven unattended! The Power electronics is not develop professionally and can fail and potentially catch fire!
 
 
-
 **Completed build**
 
-![Completed1](images/IMG_20190613_075921.jpg?raw=true) | ![Completed2](images/IMG_20190613_075926.jpg?raw=true)
------------- | -------------
+![Oven](images/IMG_20190613_075913.jpg?raw=true)
+
+
+|![Completed1](images/IMG_20190613_075921.jpg?raw=true) | ![Completed2](images/IMG_20190613_075926.jpg?raw=true)|
+|------------ | -------------|
 
 
 Introduction
@@ -46,13 +44,13 @@ Introduction
 
 This Reflow Oven Controller relies on an [ESP32], 
 
-There is schematic but no board design at the moment. There is an eagle project in the forked repository.
+There is a schematic but no board design at the moment. There is an eagle project in the forked repository.
 
 ![Schematic](Schamatic_ESP8266.png?raw=true)
 
 The board contains the [ESP32], Very simple [Zero crossing] detection circuit, used to align control logic to mains frequency, two [MAX31855] thermocouple-to-digital converters and two [Sharp S202S01] PCB-mount solid state relays, mounted on cheap [Fischer SK409 50,8] heat sinks. The current software uses only one of the thermocouples, so you need to populate one IC only. If you're lucky, you can get free samples of the MAX31855 from Maxim.
 
-The software uses [PID] control of the heater. the fan output for improved temperature is not supported at the moment.
+The software uses [PID] control of the heater. The fan output for improved temperature distribution is not supported at the moment.
 
 The software should work in 50 and 60Hz mains, the 60Hz version is not tested, though.
 
@@ -68,6 +66,16 @@ Image | Information
 ![ManualHeating](images/IMG_20190613_080029.jpg?raw=true) | *Just want to turn on the Oven? No Problem. Just choose how much % of power you want.*
 ![WiFi](images/IMG_20190613_080040.jpg?raw=true) ![WiFiPassword](images/IMG_20190613_080046.jpg?raw=true) | *To connect to the last Saved connection click on "Connect to Saved". Or just search for the Wifi in the list you want to conncet and enter the password.*
 
+Webserver
+====================
+
+When connected to the Wifi the Reflow Oven acts as a Webserver.Just access its IP-Address shown on the display in the webbrowser.
+You can start an Reflow Cycle over the browser remotely.
+
+**Reflow Cycle**
+![Reflow Cycle](images/Screenshot_20190615-144125.jpg?raw=true) 
+**Tuning**
+![Tuning](images/WebTuning.png?raw=true) 
 
 
 Obtaining the source code
