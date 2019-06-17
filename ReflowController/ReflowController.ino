@@ -6,7 +6,7 @@
 // ----------------------------------------------------------------------------
 
 //Devdefins
-//#define NOEDGEERRORREPORT 
+#define NOEDGEERRORREPORT 
 
 //Pin Mapping
 #define LCD_CS      27
@@ -1851,22 +1851,19 @@ void loop()
     uint64_t dtime=esp_timer_get_time();
     myMenue.render(renderMenuItem, MENUE_ITEMS_VISIBLE);
     
-    #ifdef NOTTESTED
     //Scrollbar
-    Menu::Info_t mi = engine->getItemInfo(engine->currentItem);
-    uint8_t sbTop = 0, sbWidth = 4, sbLeft = 100;
-    uint8_t sbItems = minValue(MENUE_ITEMS_VISIBLE, mi.siblings);
-    uint8_t sbHeight = sbItems * MENU_ITEM_HIEGT;
-    uint8_t sbMarkHeight = sbHeight * sbItems / mi.siblings;
-    uint8_t sbMarkTop = ((sbHeight - sbMarkHeight) / mi.siblings) * (mi.position -1);
-    tft.fillRect(sbLeft, sbTop,     sbWidth, sbHeight,     ST7735_WHITE);
+    Menu::Info_t mi = myMenue.getItemInfo(myMenue.currentItem);
+    uint8_t sbTop = 0, sbWidth = 4, sbLeft = 160-sbWidth;
+    float sbHeight = MENUE_ITEMS_VISIBLE * MENU_ITEM_HIEGT;
+    float sbMarkHeight = sbHeight / mi.siblings;
+    float sbMarkTop = sbMarkHeight * mi.position;
+    tft.fillRect(sbLeft, sbTop,     sbWidth, sbHeight,     ST7735_BLUE);
     tft.fillRect(sbLeft, sbMarkTop, sbWidth, sbMarkHeight, ST7735_RED);
 
     // debug scrollbar values
     char buf[30];
-    snprintf(buf,30,"itms: %d, h: %d, mh: %d, mt: %d", sbItems, sbHeight, sbMarkHeight, sbMarkTop);
+    snprintf(buf,30,"itms: %d, h: %d, mh: %d, mt: %d", MENUE_ITEMS_VISIBLE, sbHeight, sbMarkHeight, sbMarkTop);
     Serial.println(buf);
-    #endif
     
     Serial.print("Menue render took: ");
     Serial.print((uint32_t)(esp_timer_get_time() - dtime));

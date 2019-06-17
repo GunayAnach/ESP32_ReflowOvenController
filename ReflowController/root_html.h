@@ -1,3 +1,4 @@
+const char ROOT_HTML[] PROGMEM = R"=====(
 <html>
   <head>
     <meta charset="UTF-8">
@@ -182,3 +183,4 @@
   </body>
 
 </html>
+)=====";
