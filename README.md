@@ -31,6 +31,9 @@ ESP32 Reflow Oven Controller with WiFi
 
 ## Warning: This project operates with possibly lethal mains voltage. If you are unsure what to do, don't do it and get help from an experienced tinkerer with professional training.
 
+## Warning: Do not leave the Oven unattended! The Power electronics is not develop professionally and can fail and potentially catch fire!
+
+
 
 **Completed build**
 
