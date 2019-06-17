@@ -45,7 +45,7 @@ This Reflow Oven Controller relies on an [ESP32],
 
 There is schematic but no board design at the moment. There is an eagle project in the forked repository.
 
-![Schematic][ImgSCH]
+![Schematic](Schamatic_ESP8266.png)
 
 The board contains the [ESP32], Very simple [Zero crossing] detection circuit, used to align control logic to mains frequency, two [MAX31855] thermocouple-to-digital converters and two [Sharp S202S01] PCB-mount solid state relays, mounted on cheap [Fischer SK409 50,8] heat sinks. The current software uses only one of the thermocouples, so you need to populate one IC only. If you're lucky, you can get free samples of the MAX31855 from Maxim.
 
@@ -171,7 +171,6 @@ THE SOFTWARE.
 [ProfileSettingsEdit]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/ProfileSettingsEdit.jpg
 
 [Warning]:https://i.imgur.com/D3Ph8ci_d.jpg?maxwidth=640&shape=thumb&fidelity=medium
-[ImgSCH]:https://raw.githubusercontent.com/pknoe3lh/ESP32_ReflowOvenController/master/Schamatic_ESP8266.png
 
 [ImgMissingTrace]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/MissingTrace.jpg
 [Completed1]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/Completed1.jpg
