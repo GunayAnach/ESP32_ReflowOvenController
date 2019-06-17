@@ -6,7 +6,7 @@
 // ----------------------------------------------------------------------------
 
 //Devdefins
-#define NOEDGEERRORREPORT 
+//#define NOEDGEERRORREPORT 
 
 //Pin Mapping
 #define LCD_CS      27
