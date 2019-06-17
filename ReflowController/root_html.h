@@ -1,4 +1,3 @@
-const char ROOT_HTML[] PROGMEM = R"=====(
 <html>
   <head>
     <meta charset="UTF-8">
@@ -8,10 +7,7 @@ const char ROOT_HTML[] PROGMEM = R"=====(
       google.charts.load('current', {
         'packages': ['line', 'corechart']
       });
-      google.charts.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var chartDiv = document.getElementById('chart_div');
-        var button = document.getElementById('action');
+      google.charts.setOnLoadCallback(function () {
         var chartdata;
         function initchartdata(){
             chartdata = new google.visualization.DataTable()
@@ -70,8 +66,8 @@ const char ROOT_HTML[] PROGMEM = R"=====(
             }
         };
 
-        var classicChart = new google.visualization.LineChart(chartDiv);
-        var startTime=Date.now();
+//        var dtime=0;
+        var classicChart = new google.visualization.LineChart(document.getElementById('chart_div'));
         var lastState= "";
         var running=false;
         function loadstatus()
@@ -79,6 +75,24 @@ const char ROOT_HTML[] PROGMEM = R"=====(
           var lastcall=Date.now();
           $.getJSON( "status?t="+Date.now() )
            .done(function(data) {
+/*             .always(function() {
+              data= {};
+              if(dtime<=1000)
+                  data.state="Idle";
+              else if(dtime<10000)
+                  data.state="a";
+              else if(dtime<20000)
+                  data.state="b";
+              else if(dtime<30000)
+                  data.state="Complete";
+              else 
+                  dtime=0;
+              data.temp=10*dtime/1000
+              data.setpoint=20
+              data.power=50
+              data.time = dtime;
+              dtime=dtime+1000;
+*/              
 
              console.log( "success", data );
 
@@ -86,17 +100,16 @@ const char ROOT_HTML[] PROGMEM = R"=====(
              {
                  //clear all
                  initchartdata();
-                 startTime=Date.now();
                  lastState="Idle";
-                 button.innerText="Start Reflow";
+                 $('#action').text("Start Reflow");
                  running=false;
              }
              else{
                  if(data.state=="Complete"){
-                    button.innerText="Reset";                   
+                    $('#action').text("Reset");
                  }
                  else{
-                    button.innerText="Cancel";
+                    $('#action').text("Cancel");
                  }
                  running=true;
              }
@@ -133,7 +146,7 @@ const char ROOT_HTML[] PROGMEM = R"=====(
 
         loadstatus();
 
-        button.onclick = function(){
+        $('#action').click(function () {
             $.ajax({
                 url : "http://"+window.location.hostname+":8080/"+(running?"stop":"start")+"?t="+Date.now(),
                 dataType: "text",
@@ -147,19 +160,25 @@ const char ROOT_HTML[] PROGMEM = R"=====(
                     alert("Communication error!");
                 }
             });
-        }
+        });
+        $('#export').click(function () {
+            var csvFormattedDataTable = google.visualization.dataTableToCsv(chartdata).replace(/[,]/g,";");
+            var encodedUri = 'data:application/csv;charset=utf-8,' + "Time;State;Temperatur;Setpoint;Power\n" +encodeURIComponent(csvFormattedDataTable);
+            this.href = encodedUri;
+            this.download = 'Reflow_'+(new Date().toISOString().substring(0, 16).replace(/[\-:T]/g,"_"))+'.csv';
+            this.target = '_blank';
+        });        
           
-      }
+      });
       
     </script>
   </head>
   <body>
-    <div>        
-        Action: &nbsp;&nbsp;&nbsp;<button id="action" style="position: absolute; z-index: 1000"> </button>
+    <div style="position: absolute; z-index: 1000">        
+        Action: &nbsp;&nbsp;&nbsp;<button id="action" ></button> <br>
+        <a id="export" href="#">Download Graph</a>
     </div>
     <div id="chart_div" style="width: 100%; height: 100%;"></div>
   </body>
 
 </html>
-
-)=====";
