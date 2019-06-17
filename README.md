@@ -25,7 +25,7 @@ ESP32 Reflow Oven Controller with WiFi
 
 **Post action shot**
 
-![CycleWithOverflow] | ![Warning]
+![Oven](images/IMG_20190613_075913.jpg?raw=true) | ![Warning]
 ------------ | -------------
 
 
@@ -37,7 +37,7 @@ ESP32 Reflow Oven Controller with WiFi
 
 **Completed build**
 
-![Completed1] | ![Completed2]
+[Completed1](images/IMG_20190613_075921.jpg?raw=true) | [Completed2](images/IMG_20190613_075921.jpg?raw=true)
 ------------ | -------------
 
 
@@ -171,7 +171,3 @@ THE SOFTWARE.
 [ProfileSettingsEdit]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/ProfileSettingsEdit.jpg
 
 [Warning]:https://i.imgur.com/D3Ph8ci_d.jpg?maxwidth=640&shape=thumb&fidelity=medium
-
-[ImgMissingTrace]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/MissingTrace.jpg
-[Completed1]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/Completed1.jpg
-[Completed2]:https://raw.githubusercontent.com/0xPIT/reflowOvenController/master/images/Completed2.jpg
