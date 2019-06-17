@@ -1859,11 +1859,6 @@ void loop()
     float sbMarkTop = sbMarkHeight * mi.position;
     tft.fillRect(sbLeft, sbTop,     sbWidth, sbHeight,     ST7735_BLUE);
     tft.fillRect(sbLeft, sbMarkTop, sbWidth, sbMarkHeight, ST7735_RED);
-
-    // debug scrollbar values
-    char buf[30];
-    snprintf(buf,30,"itms: %d, h: %d, mh: %d, mt: %d", MENUE_ITEMS_VISIBLE, sbHeight, sbMarkHeight, sbMarkTop);
-    Serial.println(buf);
     
     Serial.print("Menue render took: ");
     Serial.print((uint32_t)(esp_timer_get_time() - dtime));
