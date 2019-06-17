@@ -18,17 +18,17 @@ ESP32 Reflow Oven Controller with WiFi
 * Manual power controll 
 * *Please Note*: Recommend ARDUINO 1.8.9
 * Libraries included in the Projekt folder to avoid problems with versions 
-* (c) 2019 Patrick Knöbel reflow@im-pro.at in part based on:
+* (c) 2019 Patrick Knöbel <reflow@im-pro.at> in part based on:
   * (c) 2014 Karl Pitrich <karl@pitrich.com>
   * (c) 2013 Ed Simmons <ed@estechnical.co.uk>
 
 **!!!DANGER!!!**
 
 ![Warning]
+
 ## Warning: This project operates with possibly lethal mains voltage. If you are unsure what to do, don't do it and get help from an experienced tinkerer with professional training.
 
 ## Warning: Do not leave the Oven unattended! The Power electronics is not develop professionally and can fail and potentially catch fire!
-
 
 **Completed build**
 
@@ -69,7 +69,7 @@ Image | Information
 Webserver
 ====================
 
-When connected to the Wifi the Reflow Oven acts as a Webserver.Just access its IP-Address shown on the display in the webbrowser.
+When connected to the Wifi the Reflow Oven acts as a Webserver. Just access its IP-Address shown on the display in the webbrowser.
 You can start an Reflow Cycle over the browser remotely.
 
 **Reflow Cycle**
@@ -111,7 +111,6 @@ Things to note
 Ideas and todo
 ====================
 * Add scrollbar (sample implementation in the demo for [Menu]
-* Named profiles
 
 Licensing
 ====================
@@ -142,28 +141,14 @@ THE SOFTWARE.
 
 [ESP32]:https://github.com/espressif/arduino-esp32
 [PID Autotune]:https://github.com/br3ttb/Arduino-PID-AutoTune-Library
-[Submodule Cheat Sheet]:http://blog.jacius.info/git-submodule-cheat-sheet/
-[ESTechnical]:http://www.estechnical.co.uk
 [Arduino Download]:http://arduino.cc/en/Main/Software
-[folder hardware]:https://github.com/0xPIT/reflowOvenController/tree/master/hardware
-[download a Snapshot]:https://github.com/0xPIT/reflowOvenController/archive/master.zip
-[the library guide]:http://arduino.cc/en/Guide/Libraries
 [PID]:http://en.wikipedia.org/wiki/PID_controller
-[Wave Packet]:http://de.wikipedia.org/wiki/Schwingungspaketsteuerung
 [Phase Fired]:http://en.wikipedia.org/wiki/Phase-fired_controllers 
 [Adafruit 1.8" TFT]:http://www.adafruit.com/products/358
 [MAX31855]:http://www.maximintegrated.com/en/products/analog/sensors-and-sensor-interface/MAX31855.html
 [Fischer SK409 50,8]:http://www.pollin.de/shop/dt/NzE5OTY1OTk-
 [Sharp S202S01]:http://sharp-world.com/products/device/lineup/data/pdf/datasheet/s102s01_e.pdf
 [Zero crossing]:http://en.wikipedia.org/wiki/Zero_crossing
-[TimerOne]:http://playground.arduino.cc/Code/Timer1
-[TimerThree]:http://playground.arduino.cc/Code/Timer1
-[Adafruit_ST7735]:https://github.com/adafruit/Adafruit-ST7735-Library
-[Adafruit_GFX]:https://github.com/adafruit/Adafruit-GFX-Library
-[Adafruit_ST7735-pit]:https://github.com/0xPIT/Adafruit-ST7735-Library
 [Menu]:https://github.com/0xPIT/menu
-[ClickEncoder]:https://github.com/0xPIT/encoder
-[Arduino Pro Micro]:https://www.sparkfun.com/products/12640
-[tindie store]:https://www.tindie.com/products/0xPIT/reflow-oven-controller-motherboard-for-arduino-pro-micro/
 
 [Warning]:https://i.imgur.com/D3Ph8ci_d.jpg?maxwidth=640&shape=thumb&fidelity=medium
