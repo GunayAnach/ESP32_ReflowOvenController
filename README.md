@@ -110,7 +110,8 @@ Things to note
 
 Ideas and todo
 ====================
-* Add scrollbar (sample implementation in the demo for [Menu])
+* Add fan control for even heat distribution and controlled cooldown (I did not need a fan)
+* Make settings accessible over the Web Page 
 
 Licensing
 ====================
