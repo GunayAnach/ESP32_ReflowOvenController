@@ -55,6 +55,8 @@ I used the original PCB with some modification and made an adapter to use the ES
 
 The board contains the [ESP32], Very simple [Zero crossing] detection circuit, used to align control logic to mains frequency, two [MAX31855] thermocouple-to-digital converters and two [Sharp S202S01] PCB-mount solid state relays, mounted on cheap [Fischer SK409 50,8] heat sinks. The current software uses only one of the thermocouples, so you need to populate one IC only. If you're lucky, you can get free samples of the MAX31855 from Maxim.
 
+The oven I used for my build: [OVEN]
+
 The software uses [PID] control of the heater. The fan output for improved temperature distribution is not supported at the moment.
 
 The software should work in 50 and 60Hz mains, the 60Hz version is not tested, though.
@@ -146,6 +148,7 @@ THE SOFTWARE.
 ```
 
 [ESP32]:https://github.com/espressif/arduino-esp32
+[OVEN]:https://geizhals.at/severin-to-2052-mini-backofen-a942484.html
 [PID Autotune]:https://github.com/br3ttb/Arduino-PID-AutoTune-Library
 [Arduino Download]:http://arduino.cc/en/Main/Software
 [PID]:http://en.wikipedia.org/wiki/PID_controller
