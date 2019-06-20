@@ -50,7 +50,7 @@ There is a schematic but no board design at the moment. There is an eagle projec
 
 I used the original PCB with some modification and made an adapter to use the ESP32 devkit v1 for it:
 
-![adapter](images/adapter.jpg?raw=true&s=200)
+![adapter](images/adapter_s.jpg?raw=true&s=200)
 
 
 The board contains the [ESP32], Very simple [Zero crossing] detection circuit, used to align control logic to mains frequency, two [MAX31855] thermocouple-to-digital converters and two [Sharp S202S01] PCB-mount solid state relays, mounted on cheap [Fischer SK409 50,8] heat sinks. The current software uses only one of the thermocouples, so you need to populate one IC only. If you're lucky, you can get free samples of the MAX31855 from Maxim.
