@@ -44,6 +44,10 @@ Introduction
 
 This Reflow Oven Controller relies on an [ESP32], 
 
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=oBlvcZ-5PeM"><img src="https://img.youtube.com/vi/oBlvcZ-5PeM/0.jpg" alt="Youtube Video"></a>
+</div>
+
 There is a schematic but no board design at the moment. There is an eagle project in the forked repository.
 
 ![Schematic](Schamatic_ESP8266.png?raw=true)
